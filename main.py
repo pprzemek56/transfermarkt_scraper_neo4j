@@ -21,7 +21,7 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 
 
 def main():
-    pass
+    get_league_url(get_soup('https://www.transfermarkt.com/ssc-neapel/startseite/verein/6195/saison_id/2022'))
 
 
 def get_soup(url):
@@ -41,7 +41,7 @@ def fetch_all_clubs(soup):
 
 def get_league(soup):
     # league url needed
-    name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald')\
+    name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald') \
         .text.strip()
     nationality = soup.find('span', class_='data-header__club').find('a').text.strip()
     is_top_5 = nationality in top_5_leagues
@@ -64,6 +64,11 @@ def fetch_all_players(soup):
         a_tag = table.find('span', class_='hide-for-small').find('a')
         players.append({'name': a_tag.text.strip(), 'url': ULR_PREFIX + a_tag.get('href')})
     return players
+
+
+def get_league_url(soap):
+    # club url needed
+    return ULR_PREFIX + soap.find('span', 'data-header__club').find('a').get('href')
 
 
 if __name__ == '__main__':
