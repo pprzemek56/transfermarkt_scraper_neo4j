@@ -21,42 +21,49 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 
 
 def main():
-    print(get_club({'name': 'SSC Napoli', 'url': 'https://www.transfermarkt.com/ssc-neapel/startseite/verein/6195/saison_id/2022'}))
+    pass
 
 
-def fetch_all_clubs(url):
+def get_soup(url):
     response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.content, 'html.parser')
+    return BeautifulSoup(response.content, 'html.parser')
+
+
+def fetch_all_clubs(soup):
+    # league url needed
     td_tags = soup.findAll('td', class_='hauptlink no-border-links')
-    football_teams = {}
+    football_teams = []
     for td_tag in td_tags:
         a_tag = td_tag.find('a')
-        football_teams.update({'name': a_tag.get('title'), 'url': ULR_PREFIX + a_tag.get('href')})
+        football_teams.append({'name': a_tag.get('title'), 'url': ULR_PREFIX + a_tag.get('href')})
     return football_teams
 
 
-def get_league(url):
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    a_tag = soup.find('span', class_='data-header__club').find('a')
-    league = {'name': a_tag.text.strip(), 'url': ULR_PREFIX + a_tag.get('href')}
-
-    response = requests.get(league['url'], headers=headers)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    a_tag = soup.find('span', class_='data-header__club').find('a')
-    league.pop('url', None)
-    league.update({'nationality': a_tag.text.strip()})
-    league.update({'is_top_5': a_tag.text.strip() in top_5_leagues})
-    return league
+def get_league(soup):
+    # league url needed
+    name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald')\
+        .text.strip()
+    nationality = soup.find('span', class_='data-header__club').find('a').text.strip()
+    is_top_5 = nationality in top_5_leagues
+    return {'name': name, 'nationality': nationality, 'is_top_5': is_top_5}
 
 
-def get_club(club):
-    response = requests.get(club.get('url'), headers=headers)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    club = {'name': club.get('name')}
-    a_tag = soup.find('span', class_='data-header__club').find('a')
-    club.update({'league': a_tag.text.strip()})
-    return club
+def get_club(soup):
+    # club url needed
+    name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald') \
+        .text.strip()
+    league = soup.find('span', class_='data-header__club').find('a').text.strip()
+    return {'name': name, 'league': league}
+
+
+def fetch_all_players(soup):
+    # club url needed
+    table_tag = soup.findAll('table', class_='inline-table')
+    players = []
+    for table in table_tag:
+        a_tag = table.find('span', class_='hide-for-small').find('a')
+        players.append({'name': a_tag.text.strip(), 'url': ULR_PREFIX + a_tag.get('href')})
+    return players
 
 
 if __name__ == '__main__':
