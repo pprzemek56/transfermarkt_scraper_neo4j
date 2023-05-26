@@ -17,14 +17,18 @@ leagues_links = [
 
 
 def main():
-    fetch_all_clubs()
+    print(fetch_all_clubs(leagues_links[0]))
 
 
-def fetch_all_clubs():
-    for link in leagues_links:
-        response = requests.get(leagues_links[0], headers=headers)
-        soup = BeautifulSoup(response.content, 'html.parser')
-        print(soup.find(class_='hauptlink no-border-links'))
+def fetch_all_clubs(link):
+    response = requests.get(link, headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    td_tags = soup.findAll('td', class_='hauptlink no-border-links')
+    football_teams = {}
+    for td_tag in td_tags:
+        a_tag = td_tag.find('a')
+        football_teams.update({a_tag.get('title'): 'https://www.transfermarkt.com' + a_tag.get('href')})
+    return football_teams
 
 
 if __name__ == '__main__':
