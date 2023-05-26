@@ -21,7 +21,7 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 
 
 def main():
-    get_league_url(get_soup('https://www.transfermarkt.com/ssc-neapel/startseite/verein/6195/saison_id/2022'))
+    pass
 
 
 def get_soup(url):
