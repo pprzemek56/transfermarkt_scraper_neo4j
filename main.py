@@ -21,7 +21,7 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 
 
 def main():
-    pass
+    get_player(get_soup(https://www.transfermarkt.com/alex-meret/profil/spieler/240414))
 
 
 def get_soup(url):
@@ -69,6 +69,11 @@ def fetch_all_players(soup):
 def get_league_url(soap):
     # club url needed
     return ULR_PREFIX + soap.find('span', 'data-header__club').find('a').get('href')
+
+
+def get_player(soap):
+    # player url needed
+    print(soap.find('span', 'data-header__shirt-number'))
 
 
 if __name__ == '__main__':
