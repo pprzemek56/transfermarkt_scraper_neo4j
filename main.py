@@ -21,7 +21,7 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 
 
 def main():
-    print(get_league('https://www.transfermarkt.com/sampdoria-genua/startseite/verein/1038/saison_id/2022'))
+    print(get_club({'name': 'SSC Napoli', 'url': 'https://www.transfermarkt.com/ssc-neapel/startseite/verein/6195/saison_id/2022'}))
 
 
 def fetch_all_clubs(url):
@@ -49,6 +49,14 @@ def get_league(url):
     league.update({'is_top_5': a_tag.text.strip() in top_5_leagues})
     return league
 
+
+def get_club(club):
+    response = requests.get(club.get('url'), headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    club = {'name': club.get('name')}
+    a_tag = soup.find('span', class_='data-header__club').find('a')
+    club.update({'league': a_tag.text.strip()})
+    return club
 
 
 if __name__ == '__main__':
