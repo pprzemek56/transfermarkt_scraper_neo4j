@@ -1,3 +1,4 @@
+import re
 import requests
 from bs4 import BeautifulSoup
 
@@ -21,7 +22,9 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 
 
 def main():
-    get_player(get_soup('https://www.transfermarkt.com/alex-meret/profil/spieler/240414'))
+    player, previous_clubs_url = get_player_and_fetch_all_previous_clubs(get_soup('https://www.transfermarkt.com/tanguy-ndombele/profil/spieler/450936'))
+    print(player)
+    print(previous_clubs_url)
 
 
 def get_soup(url):
@@ -62,7 +65,7 @@ def fetch_all_players(soup):
     players = []
     for table in table_tag:
         a_tag = table.find('span', class_='hide-for-small').find('a')
-        players.append({'name': a_tag.text.strip(), 'url': ULR_PREFIX + a_tag.get('href')})
+        players.append({'name': a_tag.get_text(strip=True), 'url': ULR_PREFIX + a_tag.get('href')})
     return players
 
 
@@ -71,15 +74,28 @@ def get_league_url(soup):
     return ULR_PREFIX + soup.find('span', 'data-header__club').find('a').get('href')
 
 
-def get_player(soup):
+def get_player_and_fetch_all_previous_clubs(soup):
     # player url needed
-    h1_tag = soup.find('h1', class_='data-header__headline-wrapper')  # find the h1 tag with the given class
+    headline = soup.find('h1', class_='data-header__headline-wrapper')
+    text = ' '.join(headline.text.split())
+    name, surname = re.sub(r'#\d{1,2}', '', text).strip().split()
+    current_club = soup.find('span', class_='data-header__club').get_text(strip=True)
+    transfers = soup.findAll('div', class_='grid tm-player-transfer-history-grid')
+    previous_clubs = []
+    previous_clubs_urls = []
+    for transfer in transfers:
+        grid_cell = transfer.find('div', class_='grid__cell grid__cell--center tm-player-transfer-history-grid__old-club')
+        link = ULR_PREFIX + grid_cell.find('a', class_='tm-player-transfer-history-grid__club-link').get('href')
+        club = grid_cell.find('a', class_='tm-player-transfer-history-grid__club-link').get_text(strip=True)
+        if club == current_club or re.search(r'U[1-9][0-9]', club) or club in previous_clubs:
+            continue
+        previous_clubs.append(club)
+        previous_clubs_urls.append(link)
 
-    # Get the full name as a string, this will be 'Alex Meret' based on your example
-    full_name = h1_tag.get_text(strip=True)
+    return {'name': name, 'surname': surname, 'current_club': current_club, 'previous_clubs': previous_clubs}, previous_clubs_urls
 
-    print(h1_tag)
 
 
 if __name__ == '__main__':
     main()
+
