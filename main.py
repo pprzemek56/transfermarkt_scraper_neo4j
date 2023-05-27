@@ -21,7 +21,7 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 
 
 def main():
-    get_player(get_soup(https://www.transfermarkt.com/alex-meret/profil/spieler/240414))
+    get_player(get_soup('https://www.transfermarkt.com/alex-meret/profil/spieler/240414'))
 
 
 def get_soup(url):
@@ -42,8 +42,8 @@ def fetch_all_clubs(soup):
 def get_league(soup):
     # league url needed
     name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald') \
-        .text.strip()
-    nationality = soup.find('span', class_='data-header__club').find('a').text.strip()
+        .get_text(strip=True)
+    nationality = soup.find('span', class_='data-header__club').find('a').get_text(strip=True)
     is_top_5 = nationality in top_5_leagues
     return {'name': name, 'nationality': nationality, 'is_top_5': is_top_5}
 
@@ -51,8 +51,8 @@ def get_league(soup):
 def get_club(soup):
     # club url needed
     name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald') \
-        .text.strip()
-    league = soup.find('span', class_='data-header__club').find('a').text.strip()
+        .get_text(strip=True)
+    league = soup.find('span', class_='data-header__club').find('a').get_text(strip=True)
     return {'name': name, 'league': league}
 
 
@@ -66,14 +66,19 @@ def fetch_all_players(soup):
     return players
 
 
-def get_league_url(soap):
+def get_league_url(soup):
     # club url needed
-    return ULR_PREFIX + soap.find('span', 'data-header__club').find('a').get('href')
+    return ULR_PREFIX + soup.find('span', 'data-header__club').find('a').get('href')
 
 
-def get_player(soap):
+def get_player(soup):
     # player url needed
-    print(soap.find('span', 'data-header__shirt-number'))
+    h1_tag = soup.find('h1', class_='data-header__headline-wrapper')  # find the h1 tag with the given class
+
+    # Get the full name as a string, this will be 'Alex Meret' based on your example
+    full_name = h1_tag.get_text(strip=True)
+
+    print(h1_tag)
 
 
 if __name__ == '__main__':

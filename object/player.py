@@ -1,6 +1,7 @@
 class Player:
-    def __init__(self, name, current_club, previous_clubs):
+    def __init__(self, name, surname, current_club, previous_clubs):
         self.name = name
+        self.surname = surname
         self.current_club = current_club
         self.previous_clubs = previous_clubs
 
@@ -11,6 +12,14 @@ class Player:
     @name.setter
     def name(self, name):
         self._name = name
+
+    @property
+    def surname(self):
+        return self._surname
+
+    @surname.setter
+    def surname(self, surname):
+        self._surname = surname
 
     @property
     def current_club(self):
