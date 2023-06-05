@@ -24,9 +24,17 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 def main():
     for link in leagues_links:
         league_soup = get_soup(link)
+        league = get_league(league_soup)
 
+        clubs_url = fetch_all_clubs(league_soup)
+        for url in clubs_url:
+            club_soup = get_soup(url.get('url'))
+            club = get_club(club_soup)
 
-
+            players_url = fetch_all_players(club_soup)
+            for player in players_url:
+                player_soup = get_soup(player.get('url'))
+                player, previous_clubs = get_player_and_fetch_all_previous_clubs(player_soup)
 
 
 
