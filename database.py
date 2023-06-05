@@ -34,6 +34,11 @@ class Neo4jConnection:
         query = f'CREATE (n:{label}, {properties}'
         self.query(query)
 
+    def create_relationship(self, node1, node2, relationship_type, properties=None):
+        properties = properties or {}
+        query = f"MATCH (a:{node1['label']}), (b:{node2['label']}) WHERE a.id = {node1['id']} AND b.id = {node2['id']} CREATE (a)-[r:{relationship_type} {properties}]->(b)"
+        self.query(query)
+
 
 
 conn = Neo4jConnection(uri="bolt://localhost:7687", user="neo4j", pwd="password")
