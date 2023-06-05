@@ -5,6 +5,9 @@ class Player:
         self.current_club = current_club
         self.previous_clubs = previous_clubs
 
+    def __str__(self) -> str:
+        return super().__str__()
+
     @property
     def name(self):
         return self._name

@@ -4,6 +4,9 @@ class League:
         self.nationality = nationality
         self.is_top_5 = is_top_5
 
+    def __str__(self) -> str:
+        return super().__str__()
+
     @property
     def name(self):
         return self._name

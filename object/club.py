@@ -3,6 +3,9 @@ class Club:
         self.name = name
         self.league = league
 
+    def __str__(self) -> str:
+        return super().__str__()
+
     @property
     def name(self):
         return self._name
