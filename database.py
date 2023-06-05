@@ -30,5 +30,10 @@ class Neo4jConnection:
                 session.close()
         return response
 
+    def create_node(self, label, properties):
+        query = f'CREATE (n:{label}, {properties}'
+        self.query(query)
+
+
 
 conn = Neo4jConnection(uri="bolt://localhost:7687", user="neo4j", pwd="password")

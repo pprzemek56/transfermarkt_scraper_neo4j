@@ -22,9 +22,12 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 
 
 def main():
-    player, previous_clubs_url = get_player_and_fetch_all_previous_clubs(get_soup('https://www.transfermarkt.com/tanguy-ndombele/profil/spieler/450936'))
-    print(player)
-    print(previous_clubs_url)
+    for link in leagues_links:
+        league_soup = get_soup(link)
+
+
+
+
 
 
 def get_soup(url):
@@ -84,7 +87,8 @@ def get_player_and_fetch_all_previous_clubs(soup):
     previous_clubs = []
     previous_clubs_urls = []
     for transfer in transfers:
-        grid_cell = transfer.find('div', class_='grid__cell grid__cell--center tm-player-transfer-history-grid__old-club')
+        grid_cell = transfer.find('div',
+                                  class_='grid__cell grid__cell--center tm-player-transfer-history-grid__old-club')
         link = ULR_PREFIX + grid_cell.find('a', class_='tm-player-transfer-history-grid__club-link').get('href')
         club = grid_cell.find('a', class_='tm-player-transfer-history-grid__club-link').get_text(strip=True)
         if club == current_club or re.search(r'U[1-9][0-9]', club) or club in previous_clubs:
@@ -92,10 +96,11 @@ def get_player_and_fetch_all_previous_clubs(soup):
         previous_clubs.append(club)
         previous_clubs_urls.append(link)
 
-    return {'name': name, 'surname': surname, 'current_club': current_club, 'previous_clubs': previous_clubs}, previous_clubs_urls
-
+    return {'name': name,
+            'surname': surname,
+            'current_club': current_club,
+            'previous_clubs': previous_clubs}, previous_clubs_urls
 
 
 if __name__ == '__main__':
     main()
-
