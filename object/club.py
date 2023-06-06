@@ -1,7 +1,6 @@
 class Club:
-    def __init__(self, name, league, url):
+    def __init__(self, name, url):
         self.name = name
-        self.league = league
         self.url = url
 
     def __str__(self) -> str:
@@ -15,13 +14,6 @@ class Club:
     def name(self, name):
         self._name = name
 
-    @property
-    def league(self):
-        return self._league
-
-    @league.setter
-    def league(self, league):
-        self._league = league
 
     @property
     def url(self):

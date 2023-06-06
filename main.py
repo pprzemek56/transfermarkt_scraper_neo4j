@@ -32,11 +32,25 @@ def main():
         # create league node
         conn.create_league('league', league)
 
-    # select all league nodes
+    # fetch all league nodes
     leagues = conn.fetch_nodes('League')
+
     for league in leagues:
         league_soup = get_soup(league['n.url'])
-        clubs_url = fetch_all_clubs(league_soup)
+        clubs = fetch_all_clubs(league_soup)
+
+        # create club nodes and relationship with league
+        for club in clubs:
+            # create club node
+            conn.create_club(club)
+            # fetch club and create a relationship with league where it belongs
+            club_node = conn.fetch_club_by_name(club.get('name'))
+            conn.create_belong_relationship(league['n.name'], club_node[0]['n.name'])
+
+    clubs = conn.fetch_nodes('Club')
+
+
+
 
 
 
@@ -68,15 +82,13 @@ def get_league(soup, url):
     return {'name': name, 'nationality': nationality, 'url': url}
 
 
-def get_club(soup):
+def get_club(soup, name_url):
     # club url needed
     if not soup.find('div', class_='data-header__box--big'):
         return None
 
-    name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald') \
-        .get_text(strip=True)
     league = soup.find('span', class_='data-header__club').find('a').get_text(strip=True)
-    return {'name': name, 'league': league}
+    return {'name': name_url.get('name'), 'league': league, 'url': name_url.get('url')}
 
 
 def fetch_all_players(soup):

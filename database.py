@@ -36,15 +36,26 @@ class Neo4jConnection:
                 f' url: "{properties["url"]}"}})'
         self.query(query)
 
+    def create_club(self, properties):
+        query = f"""
+        MERGE (n:Club {{name: "{properties['name']}", url: "{properties['url']}"}})
+        """
+        self.query(query)
+
     def fetch_nodes(self, label):
         query = f'MATCH (n:{label}) RETURN ID(n), n.name, n.nationality, n.url'
         return self.query(query)
 
-    def create_relationship(self, node1, node2, relationship_type, properties=None):
-        properties = properties or {}
-        query = f"MATCH (a:{node1['label']}), (b:{node2['label']}) WHERE a.id = {node1['id']} AND b.id = {node2['id']} CREATE (a)-[r:{relationship_type} {properties}]->(b)"
-        self.query(query)
+    def fetch_club_by_name(self, club_name):
+        query = f"MATCH (n:Club) WHERE n.name = '{club_name}' RETURN ID(n), n.name, n.url"
+        return self.query(query)
 
+    def create_belong_relationship(self, league_name, club_name):
+        query = f"""
+            MATCH (l:League {{name: '{league_name}'}}), (c:Club {{name: '{club_name}'}})
+            MERGE (c)-[r:BELONGS_TO]->(l)
+            """
+        self.query(query)
 
 
 conn = Neo4jConnection(uri="bolt://localhost:7687", user="neo4j", pwd="password")
