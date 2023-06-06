@@ -1,8 +1,8 @@
 class League:
-    def __init__(self, name, nationality, is_top_5):
+    def __init__(self, name, nationality, url):
         self.name = name
         self.nationality = nationality
-        self.is_top_5 = is_top_5
+        self.url = url
 
     def __str__(self) -> str:
         return super().__str__()
@@ -24,9 +24,9 @@ class League:
         self._nationality = nationality
 
     @property
-    def is_top_5(self):
-        return self._is_top_5
+    def url(self):
+        return self._url
 
-    @is_top_5.setter
-    def is_top_5(self, is_top_5):
-        self._is_top_5 = is_top_5
+    @url.setter
+    def url(self, url):
+        self._url = url

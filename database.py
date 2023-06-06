@@ -24,15 +24,21 @@ class Neo4jConnection:
             session = self.__driver.session(database=db) if db is not None else self.__driver.session()
             response = list(session.run(query, parameters))
         except Exception as e:
-            print("Query failed:", e)
+            print("Query failed:", e, 'query = ', query)
         finally:
             if session is not None:
                 session.close()
         return response
 
-    def create_node(self, label, properties):
-        query = f'CREATE (n:{label}, {properties}'
+    def create_league(self, label, properties):
+        query = f'MERGE (n:League {{name: "{properties["name"]}",' \
+                f' nationality: "{properties["nationality"]}",' \
+                f' url: "{properties["url"]}"}})'
         self.query(query)
+
+    def fetch_nodes(self, label):
+        query = f'MATCH (n:{label}) RETURN ID(n), n.name, n.nationality, n.url'
+        return self.query(query)
 
     def create_relationship(self, node1, node2, relationship_type, properties=None):
         properties = properties or {}

@@ -2,7 +2,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-from database import conn
+from database import Neo4jConnection
 
 ULR_PREFIX = 'https://www.transfermarkt.com'
 
@@ -22,19 +22,26 @@ top_5_leagues = ['Italy', 'England', 'Spain', 'France', 'Germany']
 
 
 def main():
+    # create connection
+    conn = Neo4jConnection(uri="bolt://localhost:7687", user="neo4j", pwd="password")
+
     for link in leagues_links:
         league_soup = get_soup(link)
-        league = get_league(league_soup)
+        league = get_league(league_soup, link)
 
+        # create league node
+        conn.create_league('league', league)
+
+    # select all league nodes
+    leagues = conn.fetch_nodes('League')
+    for league in leagues:
+        league_soup = get_soup(league['n.url'])
         clubs_url = fetch_all_clubs(league_soup)
-        for url in clubs_url:
-            club_soup = get_soup(url.get('url'))
-            club = get_club(club_soup)
 
-            players_url = fetch_all_players(club_soup)
-            for player in players_url:
-                player_soup = get_soup(player.get('url'))
-                player, previous_clubs = get_player_and_fetch_all_previous_clubs(player_soup)
+
+
+
+
 
 
 
@@ -53,17 +60,19 @@ def fetch_all_clubs(soup):
     return football_teams
 
 
-def get_league(soup):
+def get_league(soup, url):
     # league url needed
     name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald') \
         .get_text(strip=True)
     nationality = soup.find('span', class_='data-header__club').find('a').get_text(strip=True)
-    is_top_5 = nationality in top_5_leagues
-    return {'name': name, 'nationality': nationality, 'is_top_5': is_top_5}
+    return {'name': name, 'nationality': nationality, 'url': url}
 
 
 def get_club(soup):
     # club url needed
+    if not soup.find('div', class_='data-header__box--big'):
+        return None
+
     name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald') \
         .get_text(strip=True)
     league = soup.find('span', class_='data-header__club').find('a').get_text(strip=True)
@@ -89,25 +98,33 @@ def get_player_and_fetch_all_previous_clubs(soup):
     # player url needed
     headline = soup.find('h1', class_='data-header__headline-wrapper')
     text = ' '.join(headline.text.split())
-    name, surname = re.sub(r'#\d{1,2}', '', text).strip().split()
+    try:
+        name, surname = re.sub(r'#\d{1,2}', '', text).strip().split(maxsplit=1)
+    except ValueError:
+        surname = re.sub(r'#\d{1,2}', '', text).strip()
+        name = ''
+
     current_club = soup.find('span', class_='data-header__club').get_text(strip=True)
     transfers = soup.findAll('div', class_='grid tm-player-transfer-history-grid')
     previous_clubs = []
-    previous_clubs_urls = []
     for transfer in transfers:
         grid_cell = transfer.find('div',
                                   class_='grid__cell grid__cell--center tm-player-transfer-history-grid__old-club')
-        link = ULR_PREFIX + grid_cell.find('a', class_='tm-player-transfer-history-grid__club-link').get('href')
-        club = grid_cell.find('a', class_='tm-player-transfer-history-grid__club-link').get_text(strip=True)
-        if club == current_club or re.search(r'U[1-9][0-9]', club) or club in previous_clubs:
+        try:
+            link = ULR_PREFIX + grid_cell.find('a', class_='tm-player-transfer-history-grid__club-link').get('href')
+        except AttributeError:
+            continue
+
+        club_soup = get_soup(link)
+        club = get_club(club_soup)
+        if club is None or club.get('name') == current_club or club in previous_clubs:
             continue
         previous_clubs.append(club)
-        previous_clubs_urls.append(link)
 
     return {'name': name,
             'surname': surname,
             'current_club': current_club,
-            'previous_clubs': previous_clubs}, previous_clubs_urls
+            'previous_clubs': previous_clubs}
 
 
 if __name__ == '__main__':
