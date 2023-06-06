@@ -25,30 +25,55 @@ def main():
     # create connection
     conn = Neo4jConnection(uri="bolt://localhost:7687", user="neo4j", pwd="password")
 
-    for link in leagues_links:
-        league_soup = get_soup(link)
-        league = get_league(league_soup, link)
+    # for link in leagues_links:
+    #     league_soup = get_soup(link)
+    #     league = get_league(league_soup, link)
+    #
+    #     # create league node
+    #     conn.create_league('league', league)
+    #
+    # # fetch all league nodes
+    # leagues = conn.fetch_nodes('League')
+    #
+    # for league in leagues:
+    #     league_soup = get_soup(league['n.url'])
+    #     clubs = fetch_all_clubs(league_soup)
+    #
+    #     # create club nodes and relationship with league
+    #     for club in clubs:
+    #         # create club node
+    #         conn.create_club(club)
+    #         # fetch club and create a relationship with league where it belongs
+    #         club_node = conn.fetch_club_by_name(club.get('name'))
+    #         conn.create_belong_relationship(league['n.name'], club_node[0]['n.name'])
 
-        # create league node
-        conn.create_league('league', league)
-
-    # fetch all league nodes
-    leagues = conn.fetch_nodes('League')
-
-    for league in leagues:
-        league_soup = get_soup(league['n.url'])
-        clubs = fetch_all_clubs(league_soup)
-
-        # create club nodes and relationship with league
-        for club in clubs:
-            # create club node
-            conn.create_club(club)
-            # fetch club and create a relationship with league where it belongs
-            club_node = conn.fetch_club_by_name(club.get('name'))
-            conn.create_belong_relationship(league['n.name'], club_node[0]['n.name'])
-
+    # fetch all clubs
     clubs = conn.fetch_nodes('Club')
 
+    for club in clubs:
+        club_soup = get_soup(club['n.url'])
+
+        # scrape all players from giving club
+        players = fetch_all_players(club_soup)
+        for player in players:
+            player_soup = get_soup(player.get('url'))
+            previous_clubs = fetch_all_previous_clubs(player_soup, club['n.name'])
+
+            # create node player
+            conn.create_player(player)
+            print('player created')
+
+            # fetch player and create a relationship with club where he plays
+            player_node = conn.fetch_player_by_name(player.get('name'))
+            conn.create_playing_relationship(club['n.name'], player_node[0]['n.name'])
+            print('current_club relationship')
+
+            # create relationship with clubs where player played before
+            for previous_club in previous_clubs:
+                previous_club_node = conn.fetch_club_by_name(previous_club)
+                if previous_club_node:
+                    conn.create_played_relationship(previous_club_node[0]['n.name'], player_node[0]['n.name'])
+                    print('previous_club relationship')
 
 
 
@@ -56,6 +81,14 @@ def main():
 
 
 
+def fetch_all_previous_clubs(soup, current_club):
+    # player soup needed
+    previous_clubs = []
+    for club in soup.find_all('a', class_='tm-player-transfer-history-grid__club-link'):
+        club_name = club.get_text(strip=True)
+        if club_name != current_club and club_name not in previous_clubs:
+            previous_clubs.append(club_name)
+    return previous_clubs
 
 
 
@@ -65,7 +98,7 @@ def get_soup(url):
 
 
 def fetch_all_clubs(soup):
-    # league url needed
+    # league soup needed
     td_tags = soup.findAll('td', class_='hauptlink no-border-links')
     football_teams = []
     for td_tag in td_tags:
@@ -75,7 +108,7 @@ def fetch_all_clubs(soup):
 
 
 def get_league(soup, url):
-    # league url needed
+    # league soup needed
     name = soup.find('h1', class_='data-header__headline-wrapper data-header__headline-wrapper--oswald') \
         .get_text(strip=True)
     nationality = soup.find('span', class_='data-header__club').find('a').get_text(strip=True)
@@ -83,7 +116,7 @@ def get_league(soup, url):
 
 
 def get_club(soup, name_url):
-    # club url needed
+    # club soup needed
     if not soup.find('div', class_='data-header__box--big'):
         return None
 
@@ -92,7 +125,7 @@ def get_club(soup, name_url):
 
 
 def fetch_all_players(soup):
-    # club url needed
+    # club soup needed
     table_tag = soup.findAll('table', class_='inline-table')
     players = []
     for table in table_tag:
@@ -102,12 +135,12 @@ def fetch_all_players(soup):
 
 
 def get_league_url(soup):
-    # club url needed
+    # club soup needed
     return ULR_PREFIX + soup.find('span', 'data-header__club').find('a').get('href')
 
 
 def get_player_and_fetch_all_previous_clubs(soup):
-    # player url needed
+    # player soup needed
     headline = soup.find('h1', class_='data-header__headline-wrapper')
     text = ' '.join(headline.text.split())
     try:

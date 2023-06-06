@@ -42,18 +42,48 @@ class Neo4jConnection:
         """
         self.query(query)
 
+    def create_player(self, properties):
+        query = f"""
+        MERGE (n:Player {{name: "{properties['name']}", url: "{properties['url']}"}})
+        """
+        self.query(query)
+
     def fetch_nodes(self, label):
         query = f'MATCH (n:{label}) RETURN ID(n), n.name, n.nationality, n.url'
         return self.query(query)
 
     def fetch_club_by_name(self, club_name):
+        club_name = club_name.replace("'", "\\'")
         query = f"MATCH (n:Club) WHERE n.name = '{club_name}' RETURN ID(n), n.name, n.url"
+        return self.query(query)
+
+    def fetch_player_by_name(self, player_name):
+        player_name = player_name.replace("'", "\\'")
+        query = f"MATCH (n:Player) WHERE n.name = '{player_name}' RETURN ID(n), n.name, n.url"
         return self.query(query)
 
     def create_belong_relationship(self, league_name, club_name):
         query = f"""
             MATCH (l:League {{name: '{league_name}'}}), (c:Club {{name: '{club_name}'}})
             MERGE (c)-[r:BELONGS_TO]->(l)
+            """
+        self.query(query)
+
+    def create_playing_relationship(self, club_name, player_name):
+        club_name = club_name.replace("'", "\\'")
+        player_name = player_name.replace("'", "\\'")
+        query = f"""
+            MATCH (c:Club {{name: '{club_name}'}}), (p:Player {{name: '{player_name}'}})
+            MERGE (p)-[r:PLAYING]->(c)
+            """
+        self.query(query)
+
+    def create_played_relationship(self, club_name, player_name):
+        club_name = club_name.replace("'", "\\'")
+        player_name = player_name.replace("'", "\\'")
+        query = f"""
+            MATCH (c:Club {{name: '{club_name}'}}), (p:Player {{name: '{player_name}'}})
+            MERGE (p)-[r:PLAYED]->(c)
             """
         self.query(query)
 
