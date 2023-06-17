@@ -25,27 +25,27 @@ def main():
     # create connection
     conn = Neo4jConnection(uri="bolt://localhost:7687", user="neo4j", pwd="password")
 
-    # for link in leagues_links:
-    #     league_soup = get_soup(link)
-    #     league = get_league(league_soup, link)
-    #
-    #     # create league node
-    #     conn.create_league('league', league)
-    #
-    # # fetch all league nodes
-    # leagues = conn.fetch_nodes('League')
-    #
-    # for league in leagues:
-    #     league_soup = get_soup(league['n.url'])
-    #     clubs = fetch_all_clubs(league_soup)
-    #
-    #     # create club nodes and relationship with league
-    #     for club in clubs:
-    #         # create club node
-    #         conn.create_club(club)
-    #         # fetch club and create a relationship with league where it belongs
-    #         club_node = conn.fetch_club_by_name(club.get('name'))
-    #         conn.create_belong_relationship(league['n.name'], club_node[0]['n.name'])
+    for link in leagues_links:
+        league_soup = get_soup(link)
+        league = get_league(league_soup, link)
+
+        # create league node
+        conn.create_league('league', league)
+
+    # fetch all league nodes
+    leagues = conn.fetch_nodes('League')
+
+    for league in leagues:
+        league_soup = get_soup(league['n.url'])
+        clubs = fetch_all_clubs(league_soup)
+
+        # create club nodes and relationship with league
+        for club in clubs:
+            # create club node
+            conn.create_club(club)
+            # fetch club and create a relationship with league where it belongs
+            club_node = conn.fetch_club_by_name(club.get('name'))
+            conn.create_belong_relationship(league['n.name'], club_node[0]['n.name'])
 
     # fetch all clubs
     clubs = conn.fetch_nodes('Club')
