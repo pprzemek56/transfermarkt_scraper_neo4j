@@ -76,9 +76,9 @@ def main():
                     print('previous_club relationship')
 
 
-
-
-
+def get_soup(url):
+    response = requests.get(url, headers=headers)
+    return BeautifulSoup(response.content, 'html.parser')
 
 
 def fetch_all_previous_clubs(soup, current_club):
@@ -89,12 +89,6 @@ def fetch_all_previous_clubs(soup, current_club):
         if club_name != current_club and club_name not in previous_clubs:
             previous_clubs.append(club_name)
     return previous_clubs
-
-
-
-def get_soup(url):
-    response = requests.get(url, headers=headers)
-    return BeautifulSoup(response.content, 'html.parser')
 
 
 def fetch_all_clubs(soup):
@@ -115,15 +109,6 @@ def get_league(soup, url):
     return {'name': name, 'nationality': nationality, 'url': url}
 
 
-def get_club(soup, name_url):
-    # club soup needed
-    if not soup.find('div', class_='data-header__box--big'):
-        return None
-
-    league = soup.find('span', class_='data-header__club').find('a').get_text(strip=True)
-    return {'name': name_url.get('name'), 'league': league, 'url': name_url.get('url')}
-
-
 def fetch_all_players(soup):
     # club soup needed
     table_tag = soup.findAll('table', class_='inline-table')
@@ -132,44 +117,6 @@ def fetch_all_players(soup):
         a_tag = table.find('span', class_='hide-for-small').find('a')
         players.append({'name': a_tag.get_text(strip=True), 'url': ULR_PREFIX + a_tag.get('href')})
     return players
-
-
-def get_league_url(soup):
-    # club soup needed
-    return ULR_PREFIX + soup.find('span', 'data-header__club').find('a').get('href')
-
-
-def get_player_and_fetch_all_previous_clubs(soup):
-    # player soup needed
-    headline = soup.find('h1', class_='data-header__headline-wrapper')
-    text = ' '.join(headline.text.split())
-    try:
-        name, surname = re.sub(r'#\d{1,2}', '', text).strip().split(maxsplit=1)
-    except ValueError:
-        surname = re.sub(r'#\d{1,2}', '', text).strip()
-        name = ''
-
-    current_club = soup.find('span', class_='data-header__club').get_text(strip=True)
-    transfers = soup.findAll('div', class_='grid tm-player-transfer-history-grid')
-    previous_clubs = []
-    for transfer in transfers:
-        grid_cell = transfer.find('div',
-                                  class_='grid__cell grid__cell--center tm-player-transfer-history-grid__old-club')
-        try:
-            link = ULR_PREFIX + grid_cell.find('a', class_='tm-player-transfer-history-grid__club-link').get('href')
-        except AttributeError:
-            continue
-
-        club_soup = get_soup(link)
-        club = get_club(club_soup)
-        if club is None or club.get('name') == current_club or club in previous_clubs:
-            continue
-        previous_clubs.append(club)
-
-    return {'name': name,
-            'surname': surname,
-            'current_club': current_club,
-            'previous_clubs': previous_clubs}
 
 
 if __name__ == '__main__':
