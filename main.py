@@ -61,19 +61,17 @@ def main():
 
             # create node player
             conn.create_player(player)
-            print('player created')
 
             # fetch player and create a relationship with club where he plays
             player_node = conn.fetch_player_by_name(player.get('name'))
             conn.create_playing_relationship(club['n.name'], player_node[0]['n.name'])
-            print('current_club relationship')
 
             # create relationship with clubs where player played before
             for previous_club in previous_clubs:
                 previous_club_node = conn.fetch_club_by_name(previous_club)
                 if previous_club_node:
-                    conn.create_played_relationship(previous_club_node[0]['n.name'], player_node[0]['n.name'])
-                    print('previous_club relationship')
+                    conn.create_played_relationship(previous_club_node[0]['n.name'],
+                                                    player_node[0]['n.name'])
 
 
 def get_soup(url):
